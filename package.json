@@ -1,0 +1,23 @@
+{
+  "name": "control-acceso-sena",
+  "version": "1.0.0",
+  "description": "Sistema de Control de Acceso SENA",
+  "scripts": {
+    "start": "docker-compose up",
+    "start:dev": "docker-compose -f docker-compose.dev.yml up",
+    "build": "docker-compose build",
+    "build:dev": "docker-compose -f docker-compose.dev.yml build",
+    "stop": "docker-compose down",
+    "stop:dev": "docker-compose -f docker-compose.dev.yml down",
+    "clean": "docker-compose down -v",
+    "clean:dev": "docker-compose -f docker-compose.dev.yml down -v",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && npm run test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint"
+  },
+  "author": "",
+  "license": "ISC"
+}

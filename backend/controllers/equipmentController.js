@@ -1,4 +1,5 @@
 const Equipment = require('../models/equipmentModel');
+const { setCache, getCache } = require('../utils/cache');
 
 // Registrar Equipo
 const registerEquipment = async (req, res) => {
@@ -12,6 +13,9 @@ const registerEquipment = async (req, res) => {
 
     const equipment = new Equipment({ serialNumber, brand, description, accessories });
     await equipment.save();
+
+    // Invalidar caché cuando se crea un nuevo equipo
+    await setCache('allEquipments', null);
 
     res.status(201).json(equipment);
   } catch (err) {
@@ -56,7 +60,18 @@ const deleteEquipment = async (req, res) => {
 // Obtener todos los Equipos
 const getAllEquipments = async (req, res) => {
   try {
-    const equipments = await Equipment.find({});
+    // Intentar obtener del caché primero
+    const cachedEquipments = await getCache('allEquipments');
+    if (cachedEquipments) {
+      return res.json(JSON.parse(cachedEquipments));
+    }
+
+    // Si no está en caché, obtener de la base de datos
+    const equipments = await Equipment.find();
+    
+    // Guardar en caché por 1 hora
+    await setCache('allEquipments', equipments);
+
     res.json(equipments);
   } catch (err) {
     console.error('Error en getAllEquipments:', err);

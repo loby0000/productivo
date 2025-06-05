@@ -1,94 +1,187 @@
 <template>
-  <div class="p-8">
-    <h2 class="text-xl font-bold mb-4">Gestión de Usuarios</h2>
-    <button @click="showRegister = true" class="mb-4 bg-blue-600 text-white px-4 py-2 rounded">Registrar Usuario</button>
-    <table class="min-w-full bg-white border">
-      <thead>
-        <tr>
-          <th class="border px-2 py-1">Usuario</th>
-          <th class="border px-2 py-1">Documento</th>
-          <th class="border px-2 py-1">Tipo</th>
-          <th class="border px-2 py-1">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in users" :key="user._id">
-          <td class="border px-2 py-1">{{ user.username }}</td>
-          <td class="border px-2 py-1">{{ user.documentNumber }}</td>
-          <td class="border px-2 py-1">{{ user.userType }}</td>
-          <td class="border px-2 py-1">
-            <button class="text-blue-600 mr-2" @click="editUser(user)">Editar</button>
-            <button class="text-red-600" @click="deleteUser(user._id)">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="bg-white shadow rounded-lg">
+    <!-- Header -->
+    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+      <h2 class="text-lg font-medium text-gray-900">Gestión de Usuarios</h2>
+      <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
+        <Plus class="h-5 w-5 mr-2" />
+        Nuevo Usuario
+      </button>
+    </div>
 
-    <!-- Modal de registro -->
-    <div v-if="showRegister" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-      <form @submit.prevent="registerUser" class="bg-white p-6 rounded shadow w-full max-w-md">
-        <h3 class="text-lg font-bold mb-4">Registrar Usuario</h3>
-        <input v-model="form.username" placeholder="Usuario" class="w-full border mb-2 px-2 py-1" required />
-        <input v-model="form.password" type="password" placeholder="Contraseña" class="w-full border mb-2 px-2 py-1" required />
-        <input v-model="form.email" placeholder="Email" class="w-full border mb-2 px-2 py-1" required />
-        <input v-model="form.documentNumber" placeholder="Número de Documento" class="w-full border mb-2 px-2 py-1" required />
-        <input v-model="form.documentType" placeholder="Tipo de Documento" class="w-full border mb-2 px-2 py-1" required />
-        <select v-model="form.userType" class="w-full border mb-2 px-2 py-1">
-          <option value="user">Usuario</option>
-          <option value="guard">Guardia</option>
-          <option value="admin">Administrador</option>
-        </select>
-        <div class="flex justify-end mt-4">
-          <button type="button" @click="showRegister = false" class="mr-2 px-4 py-2">Cancelar</button>
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Registrar</button>
+    <!-- Tabla de usuarios -->
+    <div class="flex flex-col">
+      <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+          <div class="overflow-hidden border-b border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nombre
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="user in users" :key="user._id">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ user.email }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                      :class="user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      {{ user.active ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900 mr-4">
+                      <Edit class="h-5 w-5" />
+                    </button>
+                    <button @click="deleteUser(user._id)" class="text-red-600 hover:text-red-900">
+                      <Trash2 class="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div v-if="error" class="text-red-500 mt-2">{{ error }}</div>
-      </form>
+      </div>
+    </div>
+
+    <!-- Modal para agregar/editar usuario -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-8 max-w-md w-full">
+        <h3 class="text-lg font-medium mb-4">{{ isEditing ? 'Editar' : 'Nuevo' }} Usuario</h3>
+        <form @submit.prevent="saveUser">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Nombre</label>
+              <input type="text" v-model="userForm.name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" v-model="userForm.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+              <input type="password" v-model="userForm.password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            </div>
+            <div class="flex items-center">
+              <input type="checkbox" v-model="userForm.active" class="h-4 w-4 text-blue-600">
+              <label class="ml-2 block text-sm text-gray-900">Activo</label>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button type="button" @click="showAddModal = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md">
+              Cancelar
+            </button>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">
+              {{ isEditing ? 'Actualizar' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue';
-import api from '../api';
+<script>
+import { ref, onMounted } from 'vue'
+import { Plus, Edit, Trash2 } from 'lucide-vue-next'
+import axios from 'axios'
 
-const users = ref([]);
-const showRegister = ref(false);
-const error = ref('');
-const form = ref({
-  username: '',
-  password: '',
-  email: '',
-  documentNumber: '',
-  documentType: '',
-  userType: 'user',
-});
+export default {
+  components: {
+    Plus,
+    Edit,
+    Trash2
+  },
+  setup() {
+    const users = ref([])
+    const showAddModal = ref(false)
+    const isEditing = ref(false)
+    const userForm = ref({
+      name: '',
+      email: '',
+      password: '',
+      active: true
+    })
 
-const fetchUsers = async () => {
-  const res = await api.get('/users/filter');
-  users.value = res.data.users || [];
-};
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/users')
+        users.value = response.data
+      } catch (error) {
+        console.error('Error fetching users:', error)
+      }
+    }
 
-const registerUser = async () => {
-  error.value = '';
-  try {
-    await api.post('/users/register', form.value);
-    showRegister.value = false;
-    fetchUsers();
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Error al registrar usuario';
+    const saveUser = async () => {
+      try {
+        if (isEditing.value) {
+          await axios.put(`http://localhost:3000/api/users/${userForm.value._id}`, userForm.value)
+        } else {
+          await axios.post('http://localhost:3000/api/users', userForm.value)
+        }
+        showAddModal.value = false
+        await fetchUsers()
+        resetForm()
+      } catch (error) {
+        console.error('Error saving user:', error)
+      }
+    }
+
+    const editUser = (user) => {
+      userForm.value = { ...user }
+      isEditing.value = true
+      showAddModal.value = true
+    }
+
+    const deleteUser = async (id) => {
+      if (confirm('¿Estás seguro de eliminar este usuario?')) {
+        try {
+          await axios.delete(`http://localhost:3000/api/users/${id}`)
+          await fetchUsers()
+        } catch (error) {
+          console.error('Error deleting user:', error)
+        }
+      }
+    }
+
+    const resetForm = () => {
+      userForm.value = {
+        name: '',
+        email: '',
+        password: '',
+        active: true
+      }
+      isEditing.value = false
+    }
+
+    onMounted(fetchUsers)
+
+    return {
+      users,
+      showAddModal,
+      isEditing,
+      userForm,
+      saveUser,
+      editUser,
+      deleteUser
+    }
   }
-};
-
-const editUser = (user) => {
-  // Implementar edición
-  alert('Función de edición no implementada');
-};
-
-const deleteUser = async (id) => {
-  // Implementar eliminación
-  alert('Función de eliminación no implementada');
-};
-
-onMounted(fetchUsers);
+}
 </script>
