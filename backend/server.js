@@ -14,21 +14,22 @@ const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
-const redis = new Redis(); // Conexión a Redis en el puerto 6379
+
+// Configuración de Redis con opciones de reconexión
+const redis = new Redis({
+  port: 6379,
+  host: '127.0.0.1',
+  retryStrategy: function(times) {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 1
+});
 
 // Manejo de errores de Redis
 redis.on('error', (err) => {
-  console.error('Error al conectar a Redis:', err);
+  console.error('Error en Redis:', err);
 });
-
-// Verificar conexión a Redis
-redis.ping()
-  .then((result) => {
-    console.log('Conexión a Redis exitosa:', result); // Debería imprimir "PONG"
-  })
-  .catch((err) => {
-    console.error('No se pudo conectar a Redis:', err);
-  });
 
 // Middleware
 app.use(bodyParser.json());
@@ -40,9 +41,10 @@ app.use(mongoSanitize());
 app.use(xss());
 
 // Middleware CORS
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'];
 app.use(cors({
   origin: function(origin, callback){
+    // Permitir solicitudes sin origen (como las solicitudes del mismo origen)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
