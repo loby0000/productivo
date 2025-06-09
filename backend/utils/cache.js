@@ -1,7 +1,15 @@
-const redis = require('ioredis');
-const client = new redis();
+const Redis = require('ioredis');
 
-// Manejo de errores de Redis
+const client = new Redis({
+  port: process.env.REDIS_PORT || 6379,
+  host: process.env.REDIS_HOST || 'redis',
+  retryStrategy: function(times) {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 1
+});
+
 client.on('error', (err) => {
   console.error('Error en Redis:', err);
 });

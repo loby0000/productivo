@@ -9,8 +9,9 @@ ENV NODE_ENV=development
 COPY package*.json ./
 
 # Install all dependencies including dev dependencies
-RUN npm ci && \
-    # Verify vite is available
+RUN npm ci --include=dev && \
+    # Verify vite is available globally
+    npm install -g vite && \
     npm ls vite
 
 COPY . .

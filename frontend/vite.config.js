@@ -26,8 +26,7 @@ export default defineConfig({
       }
     },
     chunkSizeWarningLimit: 1000
-  },
-  server: {
+  },  server: {
     port: 3001,
     host: true,
     proxy: {

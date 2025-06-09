@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Lock, Eye, EyeOff, XCircle } from 'lucide-vue-next';
 import { useAuthStore } from '../store/auth';
@@ -99,11 +99,12 @@ const authStore = useAuthStore();
 const form = reactive({
   username: '',
   password: '',
-  userType: 'admin'
+  userType: 'guard' // valor por defecto
 });
 
-const error = ref('');
+const userType = computed(() => form.userType);
 const isLoading = ref(false);
+const error = ref('');
 const showPassword = ref(false);
 
 const handleLogin = async () => {

@@ -4,21 +4,21 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const routes = require('./routes');  // Importamos el index.js de rutas
 const cron = require('node-cron');
-const Redis = require('ioredis');
 const https = require('https');
 const fs = require('fs');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const User = require('./models/userModel'); // Ajusta la ruta si es necesario
 const cors = require('cors');
+const Redis = require('ioredis');
 
 const app = express();
 const PORT = 3000;
 
-// Configuración de Redis con opciones de reconexión
+// Configuración de Redis
 const redis = new Redis({
-  port: 6379,
-  host: '127.0.0.1',
+  port: process.env.REDIS_PORT || 6379,
+  host: process.env.REDIS_HOST || 'redis',
   retryStrategy: function(times) {
     const delay = Math.min(times * 50, 2000);
     return delay;
@@ -26,9 +26,12 @@ const redis = new Redis({
   maxRetriesPerRequest: 1
 });
 
-// Manejo de errores de Redis
 redis.on('error', (err) => {
   console.error('Error en Redis:', err);
+});
+
+redis.on('connect', () => {
+  console.log('Conectado a Redis');
 });
 
 // Middleware
@@ -55,7 +58,7 @@ app.use(cors({
 }));
 
 // Conectar a MongoDB
-mongoose.connect('mongodb://localhost:27017/test', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://mongodb-dev:27017/controlacceso', {
   autoIndex: false, // Desactiva la creación automática de índices
 })
   .then(() => console.log('Conectado a la base de datos'))

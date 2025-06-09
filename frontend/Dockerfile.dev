@@ -2,12 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-RUN npm install
+# Set environment to development first
+ENV NODE_ENV=development
 
+# Install ALL dependencies (including devDependencies)
+RUN npm ci
+
+# Copy the rest of the application
 COPY . .
 
 EXPOSE 3001
 
-CMD ["npm", "run", "dev"]
+# Run vite directly with host configuration
+CMD ["sh", "-c", "npx vite --host 0.0.0.0 --port 3001"]
