@@ -1,89 +1,87 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from './store/auth';
+import Users from './views/Users.vue';
 import Login from './views/Login.vue';
 import Dashboard from './views/Dashboard.vue';
-import Users from './views/Users.vue';
 import Guards from './views/Guards.vue';
 import Admins from './views/Admins.vue';
 import Equipments from './views/Equipments.vue';
 import History from './views/History.vue';
 
 const routes = [
-  { 
-    path: '/', 
-    name: 'Login', 
+  {
+    path: '/',
+    name: 'Users',
+    component: Users,
+    meta: {
+      requiresAuth: false,
+      title: 'Registro de Usuarios'
+    }
+  },
+  {
+    path: '/login',
+    name: 'Login',
     component: Login,
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: 'Iniciar Sesión'
     }
   },
-  { 
-    path: '/dashboard', 
-    name: 'Dashboard', 
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
     component: Dashboard,
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: 'Dashboard',
       roles: ['admin', 'guard']
     }
   },
-  { 
-    path: '/users', 
-    name: 'Users', 
-    component: Users,
-    meta: { 
-      requiresAuth: true,
-      title: 'Gestión de Usuarios',
-      roles: ['admin']
-    }
-  },
-  { 
-    path: '/guards', 
-    name: 'Guards', 
+  {
+    path: '/guards',
+    name: 'Guards',
     component: Guards,
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: 'Gestión de Guardias',
       roles: ['admin']
     }
   },
-  { 
-    path: '/admins', 
-    name: 'Admins', 
+  {
+    path: '/admins',
+    name: 'Admins',
     component: Admins,
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: 'Gestión de Administradores',
       roles: ['admin']
     }
   },
-  { 
-    path: '/equipments', 
-    name: 'Equipments', 
+  {
+    path: '/equipments',
+    name: 'Equipments',
     component: Equipments,
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: 'Gestión de Equipos',
       roles: ['admin', 'guard']
     }
   },
-  { 
-    path: '/history', 
-    name: 'History', 
+  {
+    path: '/history',
+    name: 'History',
     component: History,
-    meta: { 
+    meta: {
       requiresAuth: true,
       title: 'Historial',
       roles: ['admin', 'guard']
     }
   },
-  // Ruta para manejar 404
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('./views/NotFound.vue'),
-    meta: { 
+    meta: {
       requiresAuth: false,
       title: 'Página no encontrada'
     }
@@ -95,19 +93,14 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiredRoles = to.meta.roles || [];
-  
-  // Actualizar el título de la página
   document.title = `${to.meta.title} - Control de Acceso SENA`;
 
   if (!requiresAuth) {
-    // Si la ruta no requiere autenticación, permitir
-    if (authStore.token && to.path === '/') {
-      // Si está autenticado y va al login, redirigir al dashboard
+    if (authStore.token && to.path === '/login') {
       next('/dashboard');
     } else {
       next();
@@ -115,20 +108,15 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
-  // Verificar autenticación
   const isAuthenticated = authStore.token ? await authStore.checkAuth() : false;
-
   if (!isAuthenticated) {
-    next('/');
+    next('/login');
     return;
   }
-
-  // Verificar permisos
   if (requiredRoles.length && !requiredRoles.includes(authStore.userType)) {
     next('/dashboard');
     return;
   }
-
   next();
 });
 

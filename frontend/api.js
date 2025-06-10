@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from './router';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002/api',
   withCredentials: true,
   timeout: 10000,
   headers: {
@@ -39,7 +39,13 @@ api.interceptors.response.use(
           router.push('/dashboard');
           break;
         case 404:
-          // Not found
+          // Si la petición es de login, no redirigir, solo rechazar el error
+          if (error.config && error.config.url &&
+              (error.config.url.includes('/guards/login') || error.config.url.includes('/admins/login'))
+          ) {
+            // No redirigir, solo rechazar para que el login muestre el mensaje
+            break;
+          }
           router.push('/not-found');
           break;
         case 500:

@@ -8,6 +8,9 @@
         Nuevo Usuario
       </button>
     </div>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      ¿Ya tienes cuenta? <button @click="goToLogin" class="text-blue-600 hover:underline">Inicia sesión aquí</button>
+    </p>
 
     <!-- Tabla de usuarios -->
     <div class="flex flex-col">
@@ -95,6 +98,35 @@
         </form>
       </div>
     </div>
+
+    <!-- Mensaje de éxito -->
+    <div v-if="showSuccess" class="rounded-md bg-green-50 p-4 mb-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-green-800">Usuario registrado exitosamente</h3>
+        </div>
+      </div>
+      <div class="mt-2 text-green-700 text-sm">
+        Ahora puedes iniciar sesión usando tus credenciales.
+      </div>
+      <div class="mt-2 text-green-700 text-sm">
+        <button @click="goToLogin" class="text-blue-600 hover:underline">Iniciar sesión ahora</button>
+        <p class="mt-1">Recuerda usar el usuario y contraseña que acabas de registrar.</p>
+      </div>
+    </div>
+    <div v-if="errorMessage" class="rounded-md bg-red-50 p-4 mb-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">{{ errorMessage }}</h3>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -102,6 +134,7 @@
 import { ref, onMounted } from 'vue'
 import { Plus, Edit, Trash2 } from 'lucide-vue-next'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 export default {
   components: {
@@ -119,6 +152,9 @@ export default {
       password: '',
       active: true
     })
+    const showSuccess = ref(false)
+    const errorMessage = ref("")
+    const router = useRouter()
 
     const fetchUsers = async () => {
       try {
@@ -135,11 +171,16 @@ export default {
           await axios.put(`http://localhost:3000/api/users/${userForm.value._id}`, userForm.value)
         } else {
           await axios.post('http://localhost:3000/api/users', userForm.value)
+          showSuccess.value = true
+          errorMessage.value = ""
+          setTimeout(() => { showSuccess.value = false }, 3000)
         }
         showAddModal.value = false
         await fetchUsers()
         resetForm()
       } catch (error) {
+        errorMessage.value = error.response?.data?.message || 'Error al registrar usuario'
+        showSuccess.value = false
         console.error('Error saving user:', error)
       }
     }
@@ -171,6 +212,10 @@ export default {
       isEditing.value = false
     }
 
+    const goToLogin = () => {
+      router.push('/login')
+    }
+
     onMounted(fetchUsers)
 
     return {
@@ -180,7 +225,10 @@ export default {
       userForm,
       saveUser,
       editUser,
-      deleteUser
+      deleteUser,
+      goToLogin,
+      showSuccess,
+      errorMessage
     }
   }
 }

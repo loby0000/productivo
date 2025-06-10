@@ -111,7 +111,7 @@ const loginGuard = async (req, res) => {
     }
 
     const token = jwt.sign({ id: guard._id, role: 'guard' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Inicio de sesión exitoso', token });
+    res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: guard });
   } catch (err) {
     console.error('Error en loginGuard:', err); // <-- log explícito
     res.status(500).json({ message: 'Error al iniciar sesión', error: err.message });

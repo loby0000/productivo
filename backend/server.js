@@ -44,7 +44,7 @@ app.use(mongoSanitize());
 app.use(xss());
 
 // Middleware CORS
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001', 'http://localhost:3002'];
 app.use(cors({
   origin: function(origin, callback){
     // Permitir solicitudes sin origen (como las solicitudes del mismo origen)
@@ -60,6 +60,8 @@ app.use(cors({
 // Conectar a MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://mongodb-dev:27017/controlacceso', {
   autoIndex: false, // Desactiva la creación automática de índices
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
   .then(() => console.log('Conectado a la base de datos'))
   .catch(err => console.error('Error al conectar a la base de datos:', err));
