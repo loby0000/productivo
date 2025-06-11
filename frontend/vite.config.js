@@ -10,6 +10,20 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  server: {
+    port: 3001,
+    strictPort: true,
+    host: true,
+    watch: {
+      usePolling: true
+    },    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
   build: {
     // Configuración de producción
     target: 'es2015',
@@ -24,17 +38,6 @@ export default defineConfig({
           'icons': ['lucide-vue-next']
         }
       }
-    },
-    chunkSizeWarningLimit: 1000
-  },  server: {
-    port: 3001,
-    host: true,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false
-      }
-    }
+    },    chunkSizeWarningLimit: 1000
   }
 });

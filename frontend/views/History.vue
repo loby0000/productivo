@@ -92,7 +92,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import api from '../api';
+import api from '../src/api';
 
 const history = ref([]);
 const loading = ref(false);

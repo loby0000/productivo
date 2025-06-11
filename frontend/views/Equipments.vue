@@ -217,7 +217,7 @@
 import { ref, onMounted } from 'vue'
 import { Plus, Edit, Trash2, QrCode, Download, X } from 'lucide-vue-next'
 import QRCode from 'qrcode'
-import api from '../api'
+import api from '../src/api'
 import { useAuthStore } from '../store/auth'
 
 const authStore = useAuthStore()

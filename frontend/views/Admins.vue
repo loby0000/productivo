@@ -165,7 +165,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { PlusIcon } from 'lucide-vue-next';
-import api from '../api';
+import api from '../src/api';
 
 const admins = ref([]);
 const showModal = ref(false);

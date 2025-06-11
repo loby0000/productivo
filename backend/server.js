@@ -37,6 +37,24 @@ redis.on('connect', () => {
 // Middleware
 app.use(bodyParser.json());
 
+// Debug logging for all requests
+app.use((req, res, next) => {
+  const start = Date.now();
+  console.log(`[DEBUG] Incoming request: ${req.method} ${req.url}`);
+  console.log(`[DEBUG] Request headers:`, req.headers);
+  
+  // Capture response
+  const originalSend = res.send;
+  res.send = function(body) {
+    const end = Date.now();
+    console.log(`[DEBUG] Response for ${req.method} ${req.url}:`);
+    console.log(`[DEBUG] Status: ${res.statusCode}`);
+    console.log(`[DEBUG] Response time: ${end - start}ms`);
+    return originalSend.call(this, body);
+  };
+  next();
+});
+
 // Middleware para prevenir inyecciones de MongoDB
 app.use(mongoSanitize());
 
