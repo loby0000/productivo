@@ -1,6 +1,0 @@
-{
-  "verbose": true,
-  "ignore": ["*.test.js", "dump.rdb"],
-  "watch": ["*.js", "routes/", "controllers/", "models/", "middleware/", "utils/"],
-  "ext": "js,json"
-}
