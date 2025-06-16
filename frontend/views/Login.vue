@@ -1,129 +1,127 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Logo or header image could go here -->
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Control de Acceso SENA</h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          {{ isLoading ? 'Verificando credenciales...' : 'Ingrese sus credenciales para continuar' }}
-        </p>
+  <div class="min-h-screen flex flex-col justify-center items-center bg-gray-50">
+    <div class="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
+      <div class="flex mb-6 border-b">
+        <button :class="tab==='guard' ? activeTabClass : inactiveTabClass" @click="tab='guard'">Guardia</button>
+        <button :class="tab==='admin' ? activeTabClass : inactiveTabClass" @click="tab='admin'">Administrador</button>
       </div>
-
-      <form @submit.prevent="handleLogin" class="mt-8 space-y-6 bg-white p-8 rounded-lg shadow">
-        <div v-if="error" class="rounded-md bg-red-50 p-4 mb-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <XCircle class="h-5 w-5 text-red-400" />
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
-            </div>
-          </div>
+      <form @submit.prevent="onSubmit" class="space-y-4">
+        <div v-if="tab==='guard'">
+          <label class="block text-sm font-medium text-gray-700">Documento</label>
+          <input v-model="form.document" class="input" autocomplete="username" />
+          <span class="text-red-500 text-xs">{{ errors.document }}</span>
         </div>
-
-        <div class="rounded-md shadow-sm -space-y-px">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              {{ userType === 'admin' ? 'Usuario' : 'Documento' }}
-            </label>
-            <input 
-              v-model="form.username" 
-              :type="userType === 'admin' ? 'text' : 'number'"
-              required
-              :placeholder="userType === 'admin' ? 'Nombre de usuario' : 'Número de documento'"
-              class="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
-              :class="{ 'border-red-300': error }"
-            />
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-            <div class="relative">
-              <input 
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                required
-                placeholder="Contraseña"
-                class="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm pr-10"
-                :class="{ 'border-red-300': error }"
-              />
-              <button 
-                type="button" 
-                @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center"
-              >
-                <Eye v-if="!showPassword" class="h-5 w-5 text-gray-400" />
-                <EyeOff v-else class="h-5 w-5 text-gray-400" />
-              </button>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de usuario</label>
-            <select 
-              v-model="form.userType"
-              class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm rounded-md"
-            >
-              <option value="admin">Administrador</option>
-              <option value="guard">Guardia</option>
-            </select>
-          </div>
+        <div v-else>
+          <label class="block text-sm font-medium text-gray-700">Usuario Admin</label>
+          <input v-model="form.username" class="input" autocomplete="username" />
+          <span class="text-red-500 text-xs">{{ errors.username }}</span>
         </div>
-
         <div>
-          <button 
-            type="submit" 
-            :disabled="isLoading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
-          >
-            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <Lock class="h-5 w-5 text-yellow-500 group-hover:text-yellow-400" />
-            </span>
-            {{ isLoading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
-          </button>
+          <label class="block text-sm font-medium text-gray-700">Clave</label>
+          <input v-model="form.password" type="password" class="input" autocomplete="current-password" />
+          <span class="text-red-500 text-xs">{{ errors.password }}</span>
         </div>
+        <div v-if="tab==='admin' && show2FA">
+          <label class="block text-sm font-medium text-gray-700">Código de verificación</label>
+          <input v-model="form.code" class="input" />
+          <span class="text-red-500 text-xs">{{ errors.code }}</span>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold flex items-center justify-center" :disabled="loading">
+          <span v-if="loading" class="loader mr-2"></span>
+          Iniciar Sesión
+        </button>
+        <div v-if="errorMsg" class="text-red-600 text-sm text-center mt-2">{{ errorMsg }}</div>
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { Lock, Eye, EyeOff, XCircle } from 'lucide-vue-next';
-import { useAuthStore } from '../store/auth';
+import { ref, reactive } from 'vue'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
 
-const router = useRouter();
-const authStore = useAuthStore();
+const tab = ref('guard')
+const show2FA = ref(false)
+const loading = ref(false)
+const errorMsg = ref('')
+
+const activeTabClass = 'flex-1 py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-semibold focus:outline-none'
+const inactiveTabClass = 'flex-1 py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-300 font-semibold focus:outline-none'
 
 const form = reactive({
+  document: '',
   username: '',
   password: '',
-  userType: 'guard' // valor por defecto
-});
+  code: ''
+})
 
-const userType = computed(() => form.userType);
-const isLoading = ref(false);
-const error = ref('');
-const showPassword = ref(false);
+const errors = reactive({})
 
-const handleLogin = async () => {
-  isLoading.value = true;
-  error.value = '';
-  
+const guardSchema = yup.object({
+  document: yup.string().required('Documento requerido'),
+  password: yup.string().required('Clave requerida')
+})
+const adminSchema = yup.object({
+  username: yup.string().required('Usuario requerido'),
+  password: yup.string().required('Clave requerida'),
+  code: yup.string().when('$show2FA', {
+    is: true,
+    then: yup.string().required('Código requerido')
+  })
+})
+
+async function onSubmit() {
+  errorMsg.value = ''
+  loading.value = true
   try {
-    await authStore.login({
-      username: form.username,
-      password: form.password,
-      userType: form.userType
-    });
-    
-    router.push('/dashboard');
+    if (tab.value === 'guard') {
+      await guardSchema.validate(form, { abortEarly: false })
+      // Aquí iría la llamada al backend para login de guardia
+      // Simulación de éxito:
+      loading.value = false
+      // Redirigir o mostrar dashboard
+    } else {
+      await adminSchema.validate(form, { abortEarly: false, context: { show2FA: show2FA.value } })
+      // Aquí iría la llamada al backend para login de admin
+      // Si requiere 2FA, set show2FA.value = true
+      // Simulación:
+      if (!show2FA.value) {
+        show2FA.value = true
+        loading.value = false
+        return
+      }
+      loading.value = false
+      // Redirigir o mostrar dashboard
+    }
+    Object.keys(errors).forEach(k => errors[k] = '')
   } catch (err) {
-    error.value = err.response?.data?.message || 
-      'Error al iniciar sesión. Por favor, verifique sus credenciales.';
-  } finally {
-    isLoading.value = false;
+    loading.value = false
+    if (err.inner) {
+      Object.keys(errors).forEach(k => errors[k] = '')
+      err.inner.forEach(e => { errors[e.path] = e.message })
+    } else {
+      errorMsg.value = err.message
+    }
   }
-};
+}
 </script>
+
+<style scoped>
+.input {
+  @apply mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500;
+}
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>

@@ -71,20 +71,32 @@
         <form @submit.prevent="saveUser">
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Nombre</label>
-              <input type="text" v-model="userForm.name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+              <label class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
+              <input type="text" v-model="userForm.username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Email</label>
               <input type="email" v-model="userForm.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
             </div>
             <div>
+              <label class="block text-sm font-medium text-gray-700">Número de Documento</label>
+              <input type="text" v-model="userForm.documentNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+              <input type="text" v-model="userForm.documentType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Tipo de Usuario</label>
+              <select v-model="userForm.userType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                <option value="user">Usuario</option>
+                <option value="guard">Guardia</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm font-medium text-gray-700">Contraseña</label>
               <input type="password" v-model="userForm.password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
-            <div class="flex items-center">
-              <input type="checkbox" v-model="userForm.active" class="h-4 w-4 text-blue-600">
-              <label class="ml-2 block text-sm text-gray-900">Activo</label>
             </div>
           </div>
           <div class="mt-6 flex justify-end space-x-3">
@@ -147,10 +159,12 @@ export default {
     const showAddModal = ref(false)
     const isEditing = ref(false)
     const userForm = ref({
-      name: '',
+      username: '',
       email: '',
-      password: '',
-      active: true
+      documentNumber: '',
+      documentType: '',
+      userType: 'user',
+      password: ''
     })
     const showSuccess = ref(false)
     const errorMessage = ref("")
@@ -158,7 +172,7 @@ export default {
 
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/users')
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users`)
         users.value = response.data
       } catch (error) {
         console.error('Error fetching users:', error)
@@ -167,10 +181,18 @@ export default {
 
     const saveUser = async () => {
       try {
+        const payload = {
+          username: userForm.value.username,
+          email: userForm.value.email,
+          documentNumber: userForm.value.documentNumber,
+          documentType: userForm.value.documentType,
+          userType: userForm.value.userType,
+          password: userForm.value.password
+        }
         if (isEditing.value) {
-          await axios.put(`http://localhost:3000/api/users/${userForm.value._id}`, userForm.value)
+          await axios.put(`${import.meta.env.VITE_API_URL}/users/${userForm.value._id}`, payload)
         } else {
-          await axios.post('http://localhost:3000/api/users', userForm.value)
+          await axios.post(`${import.meta.env.VITE_API_URL}/users`, payload)
           showSuccess.value = true
           errorMessage.value = ""
           setTimeout(() => { showSuccess.value = false }, 3000)
@@ -194,7 +216,7 @@ export default {
     const deleteUser = async (id) => {
       if (confirm('¿Estás seguro de eliminar este usuario?')) {
         try {
-          await axios.delete(`http://localhost:3000/api/users/${id}`)
+          await axios.delete(`${import.meta.env.VITE_API_URL}/users/${id}`)
           await fetchUsers()
         } catch (error) {
           console.error('Error deleting user:', error)
@@ -204,10 +226,12 @@ export default {
 
     const resetForm = () => {
       userForm.value = {
-        name: '',
+        username: '',
         email: '',
-        password: '',
-        active: true
+        documentNumber: '',
+        documentType: '',
+        userType: 'user',
+        password: ''
       }
       isEditing.value = false
     }

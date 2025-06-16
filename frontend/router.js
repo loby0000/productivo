@@ -7,8 +7,36 @@ import Guards from './views/Guards.vue';
 import Admins from './views/Admins.vue';
 import Equipments from './views/Equipments.vue';
 import History from './views/History.vue';
+import RegisterSelector from './views/RegisterSelector.vue'
+import RegisterGuard from './views/RegisterGuard.vue'
+import RegisterAdmin from './views/RegisterAdmin.vue'
+import RegisterAdminGuardTabs from './views/RegisterAdminGuardTabs.vue'
 
 const routes = [
+  {
+    path: '/registro',
+    name: 'RegisterAdminGuardTabs',
+    component: RegisterAdminGuardTabs,
+    meta: { requiresAuth: false, title: 'Registro de Guardias y Administradores' }
+  },
+  {
+    path: '/',
+    name: 'RegisterSelector',
+    component: RegisterSelector,
+    meta: { requiresAuth: false, title: 'Registro de Guardias y Administradores' }
+  },
+  {
+    path: '/register-guard',
+    name: 'RegisterGuard',
+    component: RegisterGuard,
+    meta: { requiresAuth: false, title: 'Registrar Guardia' }
+  },
+  {
+    path: '/register-admin',
+    name: 'RegisterAdmin',
+    component: RegisterAdmin,
+    meta: { requiresAuth: false, title: 'Registrar Administrador' }
+  },
   {
     path: '/',
     name: 'Users',
