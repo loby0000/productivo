@@ -31,7 +31,7 @@
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import api from '../src/api'
 const props = defineProps({ logs: { type: Array, default: () => [] } })
 const emit = defineEmits(['new-admin'])
 const schema = yup.object({
@@ -42,7 +42,7 @@ const { handleSubmit, errors, values, resetForm, isSubmitting } = useForm({ vali
 const fechaCreacion = computed(() => new Date().toLocaleString())
 const onSubmit = handleSubmit(async (data) => {
   try {
-    await axios.post(`${import.meta.env.VITE_API_URL.replace('/api','')}/api/admins/register`, data)
+    await api.post('/admins/register', data)
     emit('new-admin', { usuario: data.username, fecha: new Date().toLocaleString() })
     alert('Administrador registrado exitosamente')
     resetForm()

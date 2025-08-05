@@ -9,11 +9,6 @@ const barcodeRoutes = require('./barcodeRoutes');
 
 const router = express.Router();
 
-// Ruta de prueba de salud (health check)
-router.get('/health', (req, res) => {
-  console.log(`[${new Date().toISOString()}] Health check hit`);
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Montar las rutas en el enrutador principal
 router.use('/users', userRoutes);

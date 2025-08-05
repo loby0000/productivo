@@ -19,5 +19,12 @@
     "lint:backend": "cd backend && npm run lint"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "vite": "^7.0.6"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^0.534.0"
+  }
 }

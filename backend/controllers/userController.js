@@ -5,60 +5,87 @@ const Log = require('../models/logModel'); // Importar el modelo de logs
 
 // Esquema de validación para usuarios
 const userSchema = Joi.object({
-  username: Joi.string().min(3).max(50).required(),
-  email: Joi.string().email().required(),
+  name: Joi.string().min(3).max(50).required(),
+  userType: Joi.string().required(),
+  documentType: Joi.string().valid('Cédula', 'Tarjeta de Identidad', 'Extranjero').required(),
   documentNumber: Joi.string().min(5).max(20).required(),
-  documentType: Joi.string().required(),
-  userType: Joi.string().valid('admin', 'guard', 'user').required(),
-  password: Joi.string().min(6).required()
+  email: Joi.string().email().required(),
+  deviceBrand: Joi.string().valid('Lenovo', 'HP', 'Dell', 'Asus', 'Acer', 'Apple', 'Samsung', 'MSI', 'Huawei', 'Otro').required(),
+  deviceSerial: Joi.string().allow(''),
+  deviceFeatures: Joi.string().allow(''),
+  hasMouse: Joi.boolean(),
+  hasCharger: Joi.boolean()
 });
 
 // Registrar Usuario
 const registerUser = async (req, res) => {
   try {
-    const { username, password, email, documentNumber, documentType, userType } = req.body;
-    console.log('Received registration request:', { username, email, documentNumber, documentType, userType });
+    const {
+      name,
+      userType,
+      documentType,
+      documentNumber,
+      email,
+      deviceBrand,
+      deviceSerial,
+      deviceFeatures,
+      hasMouse,
+      hasCharger
+    } = req.body;
+    console.log('Received registration request:', { name, email, documentNumber, documentType, userType });
 
-    if (!username || !password || !email || !documentNumber || !documentType || !userType) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    // Validar datos
+    const { error } = userSchema.validate({
+      name,
+      userType,
+      documentType,
+      documentNumber,
+      email,
+      deviceBrand,
+      deviceSerial,
+      deviceFeatures,
+      hasMouse,
+      hasCharger
+    });
+    if (error) {
+      return res.status(400).json({ message: 'Datos inválidos', error: error.details[0].message });
     }
 
-    const existingUser = await User.findOne({ $or: [{ username }, { email }, { documentNumber }] });
+    // Verificar duplicados
+    const existingUser = await User.findOne({ $or: [
+      { documentNumber },
+      { email }
+    ] });
     if (existingUser) {
       return res.status(400).json({ message: 'El usuario ya está registrado' });
     }
 
     const newUser = new User({
-      username,
-      password,
-      email,
-      documentNumber,
+      name,
+      userType,
       documentType,
-      userType
+      documentNumber,
+      email,
+      deviceBrand,
+      deviceSerial,
+      deviceFeatures,
+      hasMouse,
+      hasCharger
     });
-
     await newUser.save();
-    
-    // Invalidate cache
+    // Invalidate cache ANTES de responder
     await deleteCache('all_users');
 
     // Log the creation
     await new Log({
       action: 'CREATE_USER',
-      description: `Usuario creado: ${username}`,
+      description: `Usuario creado: ${name}`,
       userId: newUser._id
     }).save();
 
     res.status(201).json({
       message: 'Usuario registrado exitosamente',
-      user: {
-        _id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        documentNumber: newUser.documentNumber,
-        documentType: newUser.documentType,
-        userType: newUser.userType
-      }
+      user: newUser
     });
   } catch (err) {
     console.error('Error en registerUser:', err);
@@ -154,44 +181,50 @@ const getUserById = async (req, res) => {
 // Actualizar Usuario
 const updateUser = async (req, res) => {
   try {
-    const { username, email, documentNumber, documentType, userType } = req.body;
-    
-    // Verificar si el usuario existe
+    // Obtener usuario actual
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-
-    // Verificar si el nuevo email o número de documento ya están en uso por otros usuarios
-    const existingUser = await User.findOne({
-      $and: [
-        { _id: { $ne: req.params.id } },
-        { $or: [{ email }, { documentNumber }] }
-      ]
+    // Solo permitir actualizar los campos relevantes
+    const allowedFields = [
+      'name', 'userType', 'documentType', 'documentNumber', 'email',
+      'deviceBrand', 'deviceSerial', 'deviceFeatures', 'hasMouse', 'hasCharger'
+    ];
+    // Construir objeto de actualización con valores actuales + nuevos
+    const updateFields = {};
+    allowedFields.forEach(field => {
+      updateFields[field] = req.body[field] !== undefined ? req.body[field] : user[field];
     });
-
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email o número de documento ya está en uso' });
+    // Validar los datos actualizados
+    const { error } = userSchema.validate(updateFields);
+    if (error) {
+      return res.status(400).json({ message: 'Datos inválidos', error: error.details[0].message });
     }
-
+    // Verificar duplicados de email/documentNumber solo si cambian
+    if ((req.body.email && req.body.email !== user.email) || (req.body.documentNumber && req.body.documentNumber !== user.documentNumber)) {
+      const existingUser = await User.findOne({
+        $and: [
+          { _id: { $ne: req.params.id } },
+          { $or: [
+            req.body.email ? { email: req.body.email } : {},
+            req.body.documentNumber ? { documentNumber: req.body.documentNumber } : {}
+          ] }
+        ]
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email o número de documento ya está en uso' });
+      }
+    }
     // Actualizar usuario
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      { 
-        username,
-        email,
-        documentNumber,
-        documentType,
-        userType,
-        updatedAt: Date.now()
-      },
+      { ...updateFields, updatedAt: Date.now() },
       { new: true }
     );
-
     // Limpiar caché ya que los datos han cambiado
     await deleteCache('all_users');
-
-    res.json({ message: 'Usuario actualizado exitosamente', user: updatedUser });
+    res.json({ message: 'Usuario actualizado correctamente', user: updatedUser });
   } catch (err) {
     console.error('Error en updateUser:', err);
     res.status(500).json({ message: 'Error al actualizar el usuario', error: err.message });
@@ -205,8 +238,7 @@ const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-
-    // Limpiar caché ya que los datos han cambiado
+    // Limpiar caché ANTES de responder
     await deleteCache('all_users');
 
     // Registrar la eliminación

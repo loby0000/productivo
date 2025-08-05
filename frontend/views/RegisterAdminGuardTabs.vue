@@ -70,7 +70,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import * as yup from 'yup'
-import axios from 'axios'
+import api from '../src/api'
 
 const tab = ref('guard')
 const loading = ref(false)
@@ -108,7 +108,7 @@ async function registerGuard() {
   loading.value = true
   try {
     await guardSchema.validate(guardForm, { abortEarly: false })
-    await axios.post(`${import.meta.env.VITE_API_URL.replace('/api','')}/api/guards/register`, guardForm)
+    await api.post('/guards/register', guardForm)
     successMsg.value = 'Guardia registrado exitosamente'
     Object.keys(errors).forEach(k => errors[k] = '')
     Object.keys(guardForm).forEach(k => guardForm[k] = k === 'shift' ? 'mañana' : k === 'status' ? 'activo' : '')
@@ -129,7 +129,7 @@ async function registerAdmin() {
   loading.value = true
   try {
     await adminSchema.validate(adminForm, { abortEarly: false })
-    await axios.post(`${import.meta.env.VITE_API_URL.replace('/api','')}/api/admins/register`, adminForm)
+    await api.post('/admins/register', adminForm)
     successMsg.value = 'Administrador registrado exitosamente'
     Object.keys(errors).forEach(k => errors[k] = '')
     Object.keys(adminForm).forEach(k => adminForm[k] = '')

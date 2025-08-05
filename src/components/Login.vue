@@ -14,6 +14,16 @@
         <label for="userType">User Type:</label>
         <input type="text" v-model="userType" required />
       </div>
+      <div v-if="userType === 'guardia'">
+        <label for="shift">Jornada:</label>
+        <select v-model="shift" required>
+          <option value="">Seleccione una jornada</option>
+          <option value="mañana">Mañana</option>
+          <option value="tarde">Tarde</option>
+          <option value="noche">Noche</option>
+          <option value="fin de semana">Fin de semana</option>
+        </select>
+      </div>
       <button type="submit">Login</button>
     </form>
     <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
@@ -26,6 +36,7 @@ import { ref } from 'vue'
 const username = ref('')
 const password = ref('')
 const userType = ref('') // Define userType como una ref
+const shift = ref('') // Define shift como una ref
 const errorMessage = ref('')
 
 const submitForm = async () => {
@@ -33,7 +44,8 @@ const submitForm = async () => {
     const response = await this.$http.post('/api/login', {
       username: username.value,
       password: password.value,
-      userType: userType.value
+      userType: userType.value,
+      shift: shift.value // Agrega shift a los datos del formulario
     });
     // Handle successful login
   } catch (error) {

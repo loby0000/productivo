@@ -3,58 +3,58 @@
     <!-- Header -->
     <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
       <h2 class="text-lg font-medium text-gray-900">Gestión de Usuarios</h2>
-      <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
-        <Plus class="h-5 w-5 mr-2" />
-        Nuevo Usuario
-      </button>
     </div>
-    <p class="mt-2 text-center text-sm text-gray-600">
-      ¿Ya tienes cuenta? <button @click="goToLogin" class="text-blue-600 hover:underline">Inicia sesión aquí</button>
-    </p>
-
+    <div class="flex items-center px-4 py-2">
+      <input v-model="search" type="text" placeholder="Buscar" class="border rounded-md px-3 py-1 w-1/3" />
+      <select v-model="userFilter" class="ml-4 border rounded-md px-2 py-1">
+        <option value="">Usuarios Registrados</option>
+        <option value="empleado">Empleado</option>
+        <option value="visitante">Visitante</option>
+        <option value="aprendiz">Aprendiz</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
     <!-- Tabla de usuarios -->
     <div class="flex flex-col">
       <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
           <div class="overflow-hidden border-b border-gray-200">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+              <thead class="bg-gray-100">
                 <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Tipo De Usuario</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Nombre</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Tipo De Documento</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Documento</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Email</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Marca Del Equipo</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Serial Del Equipo</th>
+                  <th class="px-4 py-2 border border-gray-300 text-left">Características</th>
+                  <th class="px-4 py-2 border border-gray-300 text-center">Mouse</th>
+                  <th class="px-4 py-2 border border-gray-300 text-center">Cargador</th>
+                  <th class="px-4 py-2 border border-gray-300 text-center">Editar</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="user in users" :key="user._id">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                <tr v-for="user in filteredUsers" :key="user._id">
+                  <td class="px-4 py-2 border border-gray-300">{{ user.userType }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.name }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.documentType }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.documentNumber }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.email }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.deviceBrand }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.deviceSerial }}</td>
+                  <td class="px-4 py-2 border border-gray-300">{{ user.deviceFeatures }}</td>
+                  <td class="px-4 py-2 border border-gray-300 text-center">
+                    <span v-if="user.hasMouse">✔</span>
+                    <span v-else>✖</span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ user.email }}</div>
+                  <td class="px-4 py-2 border border-gray-300 text-center">
+                    <span v-if="user.hasCharger">✔</span>
+                    <span v-else>✖</span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                      {{ user.active ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button @click="editUser(user)" class="text-indigo-600 hover:text-indigo-900 mr-4">
-                      <Edit class="h-5 w-5" />
-                    </button>
-                    <button @click="deleteUser(user._id)" class="text-red-600 hover:text-red-900">
-                      <Trash2 class="h-5 w-5" />
-                    </button>
+                  <td class="px-4 py-2 border border-gray-300 text-center">
+                    <button @click="editUser(user)" class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Editar</button>
                   </td>
                 </tr>
               </tbody>
@@ -64,174 +64,138 @@
       </div>
     </div>
 
-    <!-- Modal para agregar/editar usuario -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-      <div class="bg-white rounded-lg p-8 max-w-md w-full">
-        <h3 class="text-lg font-medium mb-4">{{ isEditing ? 'Editar' : 'Nuevo' }} Usuario</h3>
+    <!-- Modal para editar usuario -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 max-w-xs w-full border-2 border-black relative">
+        <h3 class="text-2xl font-semibold mb-6 text-center">Editar Usuario</h3>
         <form @submit.prevent="saveUser">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
-              <input type="text" v-model="userForm.username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" v-model="userForm.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Número de Documento</label>
-              <input type="text" v-model="userForm.documentNumber" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-              <input type="text" v-model="userForm.documentType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Tipo de Usuario</label>
-              <select v-model="userForm.userType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                <option value="user">Usuario</option>
-                <option value="guard">Guardia</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Contraseña</label>
-              <input type="password" v-model="userForm.password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-            </div>
+          <div class="mb-4">
+            <label class="block text-lg font-medium mb-1">Nombre</label>
+            <input type="text" v-model="userForm.name" class="w-full border rounded px-2 py-1 text-lg" />
           </div>
-          <div class="mt-6 flex justify-end space-x-3">
-            <button type="button" @click="showAddModal = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md">
-              Cancelar
-            </button>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">
-              {{ isEditing ? 'Actualizar' : 'Guardar' }}
-            </button>
+          <div class="mb-4">
+            <label class="block text-lg font-medium mb-1">Tipo De Documento</label>
+            <select v-model="userForm.documentType" class="w-full border rounded px-2 py-1 text-lg">
+              <option value="Cédula">Cédula</option>
+              <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
+              <option value="Extranjero">Extranjero</option>
+            </select>
+          </div>
+          <div class="mb-6">
+            <label class="block text-lg font-medium mb-1">Documento</label>
+            <input type="text" v-model="userForm.documentNumber" class="w-full border rounded px-2 py-1 text-lg" />
+          </div>
+          <div class="flex justify-between items-center">
+            <button type="submit" class="bg-gray-200 border border-black px-4 py-2 rounded text-lg" :disabled="loading">Guardar</button>
+            <button type="button" @click="showAddModal = false" class="bg-gray-200 border border-black px-4 py-2 rounded text-lg">Cerrar</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Mensaje de éxito -->
-    <div v-if="showSuccess" class="rounded-md bg-green-50 p-4 mb-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-green-800">Usuario registrado exitosamente</h3>
-        </div>
-      </div>
-      <div class="mt-2 text-green-700 text-sm">
-        Ahora puedes iniciar sesión usando tus credenciales.
-      </div>
-      <div class="mt-2 text-green-700 text-sm">
-        <button @click="goToLogin" class="text-blue-600 hover:underline">Iniciar sesión ahora</button>
-        <p class="mt-1">Recuerda usar el usuario y contraseña que acabas de registrar.</p>
-      </div>
+    <div v-if="showSuccess" class="rounded-md bg-green-50 p-4 mb-4 mt-4 w-fit mx-auto">
+      <span class="text-sm font-medium text-green-800">Operación exitosa</span>
     </div>
-    <div v-if="errorMessage" class="rounded-md bg-red-50 p-4 mb-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">{{ errorMessage }}</h3>
-        </div>
-      </div>
+    <div v-if="errorMessage" class="rounded-md bg-red-50 p-4 mb-4 mt-4 w-fit mx-auto">
+      <span class="text-sm font-medium text-red-800">{{ errorMessage }}</span>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { Plus, Edit, Trash2 } from 'lucide-vue-next'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+// import { Plus } from 'lucide-vue-next'
+import api from '../src/api'
+import { useRouter, useRoute } from 'vue-router'
 
 export default {
-  components: {
-    Plus,
-    Edit,
-    Trash2
-  },
+  // components: { Plus },
   setup() {
     const users = ref([])
     const showAddModal = ref(false)
     const isEditing = ref(false)
-    const userForm = ref({
-      username: '',
-      email: '',
-      documentNumber: '',
-      documentType: '',
-      userType: 'user',
-      password: ''
-    })
+    const userForm = ref({})
     const showSuccess = ref(false)
     const errorMessage = ref("")
+    const search = ref("")
+    const loading = ref(false)
     const router = useRouter()
+    const route = useRoute()
+
+    // Nuevo: guardar los datos de query si existen
+    const queryUser = ref(null)
+    const userFilter = ref('')
 
     const fetchUsers = async () => {
+      loading.value = true
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users`)
+        const response = await api.get('/users')
         users.value = response.data
       } catch (error) {
-        console.error('Error fetching users:', error)
+        errorMessage.value = 'Error al obtener usuarios'
+      } finally {
+        loading.value = false
       }
     }
 
+    // Nuevo: filtrar por query si existe
+    const filteredUsers = computed(() => {
+      let base = users.value
+      if (userFilter.value) {
+        base = base.filter(u => u.userType === userFilter.value)
+      }
+      if (!search.value) return base
+      return base.filter(u =>
+        (u.name || '').toLowerCase().includes(search.value.toLowerCase()) ||
+        (u.documentNumber || '').includes(search.value) ||
+        (u.email || '').toLowerCase().includes(search.value.toLowerCase())
+      )
+    })
+
     const saveUser = async () => {
+      loading.value = true
       try {
         const payload = {
-          username: userForm.value.username,
-          email: userForm.value.email,
-          documentNumber: userForm.value.documentNumber,
+          name: userForm.value.name,
           documentType: userForm.value.documentType,
-          userType: userForm.value.userType,
-          password: userForm.value.password
+          documentNumber: userForm.value.documentNumber
         }
         if (isEditing.value) {
-          await axios.put(`${import.meta.env.VITE_API_URL}/users/${userForm.value._id}`, payload)
-        } else {
-          await axios.post(`${import.meta.env.VITE_API_URL}/users`, payload)
-          showSuccess.value = true
-          errorMessage.value = ""
-          setTimeout(() => { showSuccess.value = false }, 3000)
+          await api.put(`/users/${userForm.value._id}`, payload)
         }
         showAddModal.value = false
         await fetchUsers()
+        showSuccess.value = true
+        setTimeout(() => showSuccess.value = false, 2000)
         resetForm()
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || 'Error al registrar usuario'
+        errorMessage.value = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar usuario'
         showSuccess.value = false
+        setTimeout(() => errorMessage.value = '', 2500)
         console.error('Error saving user:', error)
+      } finally {
+        loading.value = false
       }
     }
 
     const editUser = (user) => {
-      userForm.value = { ...user }
+      userForm.value = {
+        _id: user._id,
+        name: user.name || '',
+        documentType: user.documentType || '',
+        documentNumber: user.documentNumber || ''
+      }
       isEditing.value = true
       showAddModal.value = true
     }
 
-    const deleteUser = async (id) => {
-      if (confirm('¿Estás seguro de eliminar este usuario?')) {
-        try {
-          await axios.delete(`${import.meta.env.VITE_API_URL}/users/${id}`)
-          await fetchUsers()
-        } catch (error) {
-          console.error('Error deleting user:', error)
-        }
-      }
-    }
-
     const resetForm = () => {
       userForm.value = {
-        username: '',
-        email: '',
-        documentNumber: '',
+        _id: '',
+        name: '',
         documentType: '',
-        userType: 'user',
-        password: ''
+        documentNumber: ''
       }
       isEditing.value = false
     }
@@ -240,19 +204,31 @@ export default {
       router.push('/login')
     }
 
-    onMounted(fetchUsers)
+    onMounted(() => {
+      // Si hay query, guardar datos para filtrar
+      if (Object.keys(route.query).length) {
+        queryUser.value = {
+          name: route.query.name || '',
+          documentNumber: route.query.documentNumber || ''
+        }
+      }
+      fetchUsers()
+    });
 
     return {
       users,
       showAddModal,
       isEditing,
       userForm,
+      showSuccess,
+      errorMessage,
+      search,
+      userFilter,
+      filteredUsers,
       saveUser,
       editUser,
-      deleteUser,
       goToLogin,
-      showSuccess,
-      errorMessage
+      loading
     }
   }
 }

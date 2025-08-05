@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from './store/auth';
+import GuardForm from './views/GuardForm.vue';
 import Users from './views/Users.vue';
 import Login from './views/Login.vue';
-import Dashboard from './views/Dashboard.vue';
+// ...existing code...
 import Guards from './views/Guards.vue';
 import Admins from './views/Admins.vue';
 import Equipments from './views/Equipments.vue';
@@ -21,9 +22,9 @@ const routes = [
   },
   {
     path: '/',
-    name: 'RegisterSelector',
-    component: RegisterSelector,
-    meta: { requiresAuth: false, title: 'Registro de Guardias y Administradores' }
+    name: 'Login',
+    component: Login,
+    meta: { requiresAuth: false, title: 'Iniciar Sesión' }
   },
   {
     path: '/register-guard',
@@ -38,33 +39,17 @@ const routes = [
     meta: { requiresAuth: false, title: 'Registrar Administrador' }
   },
   {
-    path: '/',
-    name: 'Users',
-    component: Users,
-    meta: {
-      requiresAuth: false,
-      title: 'Registro de Usuarios'
-    }
-  },
-  {
     path: '/login',
-    name: 'Login',
+    name: 'LoginPage',
     component: Login,
     meta: {
       requiresAuth: false,
       title: 'Iniciar Sesión'
     }
   },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: Dashboard,
-    meta: {
-      requiresAuth: true,
-      title: 'Dashboard',
-      roles: ['admin', 'guard']
-    }
-  },
+  // Eliminada la ruta duplicada '/' para DashboardAdmin
+  // Ruta dashboard eliminada
+  // Ruta admin-dashboard eliminada
   {
     path: '/guards',
     name: 'Guards',
@@ -106,6 +91,16 @@ const routes = [
     }
   },
   {
+    path: '/formulario-guardia',
+    name: 'GuardForm',
+    component: GuardForm,
+    meta: {
+      requiresAuth: true,
+      title: 'Formulario Guardia',
+      roles: ['guard']
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('./views/NotFound.vue'),
@@ -129,7 +124,11 @@ router.beforeEach(async (to, from, next) => {
 
   if (!requiresAuth) {
     if (authStore.token && to.path === '/login') {
-      next('/dashboard');
+      if (authStore.userType === 'admin') {
+        next('/admins');
+      } else {
+        next('/formulario-guardia');
+      }
     } else {
       next();
     }
@@ -142,7 +141,11 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   if (requiredRoles.length && !requiredRoles.includes(authStore.userType)) {
-    next('/dashboard');
+    if (authStore.userType === 'admin') {
+      next('/admins');
+    } else {
+      next('/formulario-guardia');
+    }
     return;
   }
   next();

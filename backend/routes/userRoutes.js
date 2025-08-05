@@ -1,23 +1,17 @@
 const express = require('express');
-const { 
-  filterUsers, 
-  registerUser, 
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser
-} = require('../controllers/userController');
 const router = express.Router();
+const { registerUser, getAllUsers, updateUser, deleteUser } = require('../controllers/userController');
 
-// Base user routes
+// Obtener todos los usuarios
 router.get('/', getAllUsers);
-router.post('/', registerUser);
-router.get('/:id', getUserById);
-router.put('/:id', updateUser);
+
+// Registrar usuario con equipo
+router.post('/register', registerUser);
+
+// Eliminar usuario por ID (usa el controlador)
 router.delete('/:id', deleteUser);
 
-// Additional routes
-router.get('/filter', filterUsers);
-router.post('/register', registerUser); // Keep for backward compatibility
+// Actualizar usuario por ID (usa el controlador)
+router.put('/:id', updateUser);
 
 module.exports = router;

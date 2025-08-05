@@ -30,14 +30,7 @@ export default defineConfig({
     minify: 'terser',
     cssCodeSplit: true,
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'qr-vendor': ['qrcode'],
-          'icons': ['lucide-vue-next']
-        }
-      }
-    },    chunkSizeWarningLimit: 1000
+    rollupOptions: {},
+    chunkSizeWarningLimit: 1000
   }
 });

@@ -64,32 +64,13 @@
 
       <!-- Content based on active tab -->
       <div v-else>
-        <!-- Dashboard Overview -->
+        <!-- Dashboard Overview con mujeres -->
         <div v-if="activeTab === 'dashboard'" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <Users class="h-6 w-6 text-gray-400" />
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">
-                      Total Usuarios
-                    </dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">
-                        <!-- Add actual count here -->
-                        0
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+          <div v-for="mujer in mujeres" :key="mujer.nombre" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center p-6">
+            <img :src="mujer.avatar" class="w-24 h-24 rounded-full mb-4" alt="avatar" />
+            <div class="text-lg font-bold">{{ mujer.nombre }}</div>
+            <div class="text-sm text-gray-500">{{ mujer.rol }}</div>
           </div>
-
-          <!-- Add more dashboard cards here -->
         </div>
 
         <!-- Users Section -->
@@ -122,73 +103,43 @@
 </template>
 
 <script>
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  Shield, LogOut, Users, UserPlus, History, Settings, Clock, Plus, Edit, Trash2, 
-  QrCode, FileSpreadsheet, FileText, AlertCircle, Loader2, Search
-} from 'lucide-vue-next'
+import { useAuthStore } from '../store/auth'
+import { Shield, LogOut, Users, UserPlus, History, Settings, FileSpreadsheet, AlertCircle, Loader2 } from 'lucide-vue-next'
 
 export default {
   name: 'AccessControlSystem',
-  components: {
-    Shield, LogOut, Users, UserPlus, History, Settings, Clock, Plus, Edit, Trash2,
-    QrCode, FileSpreadsheet, FileText, AlertCircle, Loader2, Search
-  },
+  components: { Shield, LogOut, Users, UserPlus, History, Settings, FileSpreadsheet, AlertCircle, Loader2 },
   setup() {
     const router = useRouter()
-    const isAuthenticated = ref(true)
-    const currentUser = ref({
-      name: 'Usuario Demo',
-      role: 'admin'
-    })
+    const auth = useAuthStore()
+    const isAuthenticated = computed(() => !!auth.token)
+    const currentUser = computed(() => auth.user || { name: 'Usuario', role: auth.userType || 'guard' })
     const activeTab = ref('dashboard')
-    
+
     const availableTabs = computed(() => [
-      {
-        id: 'dashboard',
-        name: 'Dashboard',
-        icon: Shield,
-        show: true
-      },
-      {
-        id: 'users',
-        name: 'Usuarios',
-        icon: Users,
-        show: currentUser.value.role === 'admin'
-      },
-      {
-        id: 'guards',
-        name: 'Guardias',
-        icon: UserPlus,
-        show: currentUser.value.role === 'admin'
-      },
-      {
-        id: 'equipment',
-        name: 'Equipos',
-        icon: FileSpreadsheet,
-        show: true
-      },
-      {
-        id: 'history',
-        name: 'Historial',
-        icon: History,
-        show: true
-      },
-      {
-        id: 'settings',
-        name: 'Configuración',
-        icon: Settings,
-        show: currentUser.value.role === 'admin'
-      }
+      { id: 'dashboard', name: 'Dashboard', icon: Shield, show: true },
+      { id: 'users', name: 'Usuarios', icon: Users, show: currentUser.value.role === 'admin' },
+      { id: 'guards', name: 'Guardias', icon: UserPlus, show: currentUser.value.role === 'admin' },
+      { id: 'equipment', name: 'Equipos', icon: FileSpreadsheet, show: true },
+      { id: 'history', name: 'Historial', icon: History, show: true },
+      { id: 'settings', name: 'Configuración', icon: Settings, show: currentUser.value.role === 'admin' }
     ].filter(tab => tab.show))
+
+    // Avatares/mujeres de ejemplo
+    const mujeres = [
+      { nombre: 'María', rol: 'Guardia', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
+      { nombre: 'Ana', rol: 'Admin', avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
+      { nombre: 'Luisa', rol: 'Guardia', avatar: 'https://randomuser.me/api/portraits/women/68.jpg' }
+    ]
 
     const loading = ref(false)
     const error = ref(null)
 
     const logout = async () => {
       try {
-        // Implementar la lógica de cierre de sesión aquí
+        auth.logout()
         await router.push('/login')
       } catch (err) {
         console.error('Error al cerrar sesión:', err)
@@ -196,7 +147,7 @@ export default {
     }
 
     onMounted(() => {
-      // Cargar datos iniciales si es necesario
+      if (!auth.token) router.push('/login')
     })
 
     return {
@@ -206,7 +157,8 @@ export default {
       availableTabs,
       loading,
       error,
-      logout
+      logout,
+      mujeres
     }
   }
 }

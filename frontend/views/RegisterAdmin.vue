@@ -18,7 +18,7 @@
 </template>
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import api from '../src/api'
 const form = ref({
   username: '',
   password: ''
@@ -27,7 +27,7 @@ const success = ref(false)
 const error = ref('')
 async function registerAdmin() {
   try {
-    await axios.post(`${import.meta.env.VITE_API_URL.replace('/api','')}/api/admins/register`, form.value)
+    await api.post('/admins/register', form.value)
     success.value = true
     error.value = ''
     form.value = { username: '', password: '' }

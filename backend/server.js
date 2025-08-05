@@ -34,44 +34,35 @@ redis.on('connect', () => {
   console.log('Conectado a Redis');
 });
 
+// Middleware CORS (¡debe ir antes de cualquier endpoint!)
+app.use(cors({
+  origin: ['http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware
 app.use(bodyParser.json());
+app.use(mongoSanitize());
+app.use(xss());
 
-// Request logging middleware
+// Middleware para logging de requests
 app.use((req, res, next) => {
   const start = Date.now();
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  
-  // Capturar la respuesta
+  const originalUrl = req.originalUrl || req.url;
+  console.log(`[${new Date().toISOString()}] ${req.method} ${originalUrl}`);
   const originalSend = res.send;
   res.send = function(body) {
     const end = Date.now();
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Status: ${res.statusCode} - Response time: ${end - start}ms`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${originalUrl} - Status: ${res.statusCode} - Response time: ${end - start}ms`);
     return originalSend.call(this, body);
   };
-
   next();
 });
 
-// Middleware para prevenir inyecciones de MongoDB
-app.use(mongoSanitize());
-
-// Middleware para prevenir ataques XSS
-app.use(xss());
-
-// Middleware CORS
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001', 'http://localhost:3002'];
-app.use(cors({
-  origin: function(origin, callback){
-    // Permitir solicitudes sin origen (como las solicitudes del mismo origen)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+// Usar todas las rutas centralizadas
+app.use('/api', routes);
 
 // Conectar a MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://mongodb-dev:27017/controlacceso', {
@@ -79,8 +70,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://mongodb-dev:27017/control
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-  .then(() => console.log('Conectado a la base de datos'))
-  .catch(err => console.error('Error al conectar a la base de datos:', err));
+.then(() => console.log('Conectado a la base de datos'))
+.catch(err => console.error('Error al conectar a la base de datos:', err));
 
 // Definición del esquema de usuario
 const userSchema = new mongoose.Schema({
@@ -97,9 +88,6 @@ const userSchema = new mongoose.Schema({
 User.syncIndexes()
   .then(() => console.log('Índices sincronizados correctamente.'))
   .catch(err => console.error('Error al sincronizar índices:', err));
-
-// Usar todas las rutas centralizadas
-app.use('/api', routes);
 
 // Configurar un cron job para limpiar el historial cada día a medianoche
 cron.schedule('0 0 * * *', () => {

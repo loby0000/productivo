@@ -13,13 +13,13 @@ services:
       - app-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/controlacceso}
       - JWT_SECRET=${JWT_SECRET:-your-secret-key}
       - REDIS_HOST=redis

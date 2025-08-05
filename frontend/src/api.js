@@ -1,8 +1,21 @@
 import axios from 'axios';
 import router from '../router';
 
+
+// Detect environment and set API baseURL accordingly
+let baseURL = import.meta.env.VITE_API_URL;
+if (typeof window !== 'undefined') {
+  // If running in browser, adjust for Docker/local
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    baseURL = 'http://localhost:3000/api';
+  } else {
+    // If running in Docker (accessed by container name or IP), use env or fallback
+    baseURL = baseURL || 'http://backend:3000/api';
+  }
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://backend-dev:3000/api',
+  baseURL,
   withCredentials: true,
   timeout: 10000,
   headers: {

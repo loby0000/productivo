@@ -1,9 +1,3 @@
 <template>
-  <div>
-    <Users />
-  </div>
+  <router-view />
 </template>
-
-<script setup>
-import Users from './views/Users.vue'
-</script>

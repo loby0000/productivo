@@ -97,12 +97,17 @@ const getGuardById = async (req, res) => {
 
 // Iniciar sesión Guardia
 const loginGuard = async (req, res) => {
-  const { document, password } = req.body;
+  const { document, password, shift } = req.body;
 
   try {
     const guard = await Guard.findOne({ document });
     if (!guard) {
       return res.status(404).json({ message: 'Guardia no encontrado' });
+    }
+
+    // Validar que la jornada coincida
+    if (shift && guard.shift !== shift) {
+      return res.status(401).json({ message: 'Jornada incorrecta para este guardia' });
     }
 
     const isMatch = await bcrypt.compare(password, guard.password);
@@ -111,10 +116,23 @@ const loginGuard = async (req, res) => {
     }
 
     const token = jwt.sign({ id: guard._id, role: 'guard' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: guard });
+    res.status(200).json({ message: 'Inicio de sesión exitoso', token, user: guard, role: 'guard' });
   } catch (err) {
     console.error('Error en loginGuard:', err); // <-- log explícito
     res.status(500).json({ message: 'Error al iniciar sesión', error: err.message });
+  }
+};
+
+// Obtener datos del guardia autenticado
+const getMe = async (req, res) => {
+  try {
+    const guard = await Guard.findById(req.user.id).select('-password');
+    if (!guard) {
+      return res.status(404).json({ message: 'Guardia no encontrado' });
+    }
+    res.json(guard);
+  } catch (err) {
+    res.status(500).json({ message: 'Error al obtener datos del guardia', error: err.message });
   }
 };
 
@@ -124,5 +142,6 @@ module.exports = {
   deleteGuard,
   getAllGuards,
   getGuardById,
-  loginGuard
+  loginGuard,
+  getMe
 };

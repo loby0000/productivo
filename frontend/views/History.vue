@@ -19,7 +19,15 @@
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Fecha Hasta</label>
-        <input type="date" v-model="filters.endDate" class="w-full border rounded px-2 py-1">
+<template>
+  <div>
+    <h1>Historial</h1>
+    <!-- Aquí irá la funcionalidad de historial -->
+  </div>
+</template>
+<script setup>
+// ... lógica de historial ...
+</script>
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Documento</label>

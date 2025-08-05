@@ -1,11 +1,17 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true }, // Índice único
-  documentNumber: { type: String, required: true, unique: true }, // Índice único
-  userType: { type: String, enum: ['admin', 'guard', 'user'], required: true },
+  name: { type: String, required: true },
+  userType: { type: String, required: true },
+  documentType: { type: String, required: true },
+  documentNumber: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  deviceBrand: { type: String },
+  deviceSerial: { type: String },
+  deviceFeatures: { type: String },
+  registerDate: { type: Date },
+  hasMouse: { type: Boolean, default: false },
+  hasCharger: { type: Boolean, default: false }
 }, { timestamps: true });
 
-// No definas índices manualmente aquí si ya están definidos en los campos
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

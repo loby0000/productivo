@@ -4,9 +4,22 @@ const generateToken = require('../config/jwtConfig');
 const crypto = require('crypto');
 const { registerLog } = require('./logController');
 const Log = require('../models/logModel'); // Importar el modelo de logs
+// Obtener datos del admin autenticado
+const getMe = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.id).select('-password');
+    if (!admin) {
+      return res.status(404).json({ message: 'Administrador no encontrado' });
+    }
+    res.json(admin);
+  } catch (err) {
+    res.status(500).json({ message: 'Error al obtener datos del admin', error: err.message });
+  }
+};
 
 // Registrar Admin
 const registerAdmin = async (req, res) => {
+  console.log('Body recibido en registerAdmin:', req.body);
   const { username, password } = req.body;
 
   try {
@@ -69,8 +82,9 @@ const loginAdmin = async (req, res) => {
     admin.lockUntil = null;
     await admin.save();
 
-    const token = generateToken(admin._id);
-    res.json({ id: admin._id, username: admin.username, token });
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ id: admin._id, username: admin.username, token, role: 'admin' });
   } catch (err) {
     console.error('Error en loginAdmin:', err);
     res.status(500).json({ message: 'Error al iniciar sesión', error: err.message });
@@ -210,4 +224,4 @@ const unlockAdminAccount = async (req, res) => {
   }
 };
 
-module.exports = { registerAdmin, loginAdmin, enableTwoFactor, getCurrentAdmin, getAdminLogs, deleteAdmin, updateAdmin, unlockAdminAccount };
+module.exports = { registerAdmin, loginAdmin, enableTwoFactor, getCurrentAdmin, getAdminLogs, deleteAdmin, updateAdmin, unlockAdminAccount, getMe };

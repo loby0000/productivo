@@ -9,5 +9,18 @@ services:
       - redis-data:/data
     restart: always
 
+  backend:
+    build: .
+    container_name: backend-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - redis
+
 volumes:
   redis-data:
+

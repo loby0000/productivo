@@ -2,7 +2,15 @@
   <div class="bg-white shadow rounded-lg">
     <!-- Header -->
     <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-      <h2 class="text-lg font-medium text-gray-900">Gestión de Equipos</h2>
+<template>
+  <div>
+    <h1>Control Equipos</h1>
+    <!-- Aquí irá la funcionalidad de equipos -->
+  </div>
+</template>
+<script setup>
+// ... lógica de equipos ...
+</script>
       <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
         <Plus class="h-5 w-5 mr-2" />
         Nuevo Equipo
@@ -215,7 +223,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Plus, Edit, Trash2, QrCode, Download, X } from 'lucide-vue-next'
+// import { Plus, Edit, Trash2, QrCode, Download, X } from 'lucide-vue-next'
 import QRCode from 'qrcode'
 import api from '../src/api'
 import { useAuthStore } from '../store/auth'

@@ -1,15 +1,29 @@
 <template>
   <div class="min-h-screen flex flex-col justify-center items-center bg-gray-50">
     <div class="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
-      <div class="flex mb-6 border-b">
-        <button :class="tab==='guard' ? activeTabClass : inactiveTabClass" @click="tab='guard'">Guardia</button>
-        <button :class="tab==='admin' ? activeTabClass : inactiveTabClass" @click="tab='admin'">Administrador</button>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de usuario</label>
+        <select v-model="tab" class="input">
+          <option value="guard">Guardia</option>
+          <option value="admin">Administrador</option>
+        </select>
       </div>
       <form @submit.prevent="onSubmit" class="space-y-4">
         <div v-if="tab==='guard'">
           <label class="block text-sm font-medium text-gray-700">Documento</label>
           <input v-model="form.document" class="input" autocomplete="username" />
           <span class="text-red-500 text-xs">{{ errors.document }}</span>
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700">Jornada</label>
+            <select v-model="form.shift" class="input">
+              <option value="">Seleccione una jornada</option>
+              <option value="mañana">Mañana</option>
+              <option value="tarde">Tarde</option>
+              <option value="noche">Noche</option>
+              <option value="fin de semana">Fin de semana</option>
+            </select>
+            <span class="text-red-500 text-xs">{{ errors.shift }}</span>
+          </div>
         </div>
         <div v-else>
           <label class="block text-sm font-medium text-gray-700">Usuario Admin</label>
@@ -21,16 +35,16 @@
           <input v-model="form.password" type="password" class="input" autocomplete="current-password" />
           <span class="text-red-500 text-xs">{{ errors.password }}</span>
         </div>
-        <div v-if="tab==='admin' && show2FA">
-          <label class="block text-sm font-medium text-gray-700">Código de verificación</label>
-          <input v-model="form.code" class="input" />
-          <span class="text-red-500 text-xs">{{ errors.code }}</span>
-        </div>
+        <!-- Eliminado campo de código de verificación para admin -->
         <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold flex items-center justify-center" :disabled="loading">
           <span v-if="loading" class="loader mr-2"></span>
           Iniciar Sesión
         </button>
         <div v-if="errorMsg" class="text-red-600 text-sm text-center mt-2">{{ errorMsg }}</div>
+        <div class="text-center mt-4">
+          <span class="text-gray-600 text-sm">¿No tienes cuenta?</span>
+          <router-link to="/registro" class="text-blue-600 hover:underline ml-1 text-sm">Registrarse</router-link>
+        </div>
       </form>
     </div>
   </div>
@@ -38,11 +52,13 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
+import { useAuthStore } from '../store/auth'
 
 const tab = ref('guard')
-const show2FA = ref(false)
+// Eliminado show2FA, ya no se usa 2FA para admin
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -53,23 +69,25 @@ const form = reactive({
   document: '',
   username: '',
   password: '',
-  code: ''
+  code: '',
+  shift: ''
 })
 
 const errors = reactive({})
 
 const guardSchema = yup.object({
   document: yup.string().required('Documento requerido'),
-  password: yup.string().required('Clave requerida')
+  password: yup.string().required('Clave requerida'),
+  shift: yup.string().required('Seleccione una jornada')
 })
 const adminSchema = yup.object({
   username: yup.string().required('Usuario requerido'),
-  password: yup.string().required('Clave requerida'),
-  code: yup.string().when('$show2FA', {
-    is: true,
-    then: yup.string().required('Código requerido')
-  })
+  password: yup.string().required('Clave requerida')
 })
+
+const router = useRouter()
+
+const authStore = useAuthStore()
 
 async function onSubmit() {
   errorMsg.value = ''
@@ -77,24 +95,22 @@ async function onSubmit() {
   try {
     if (tab.value === 'guard') {
       await guardSchema.validate(form, { abortEarly: false })
-      // Aquí iría la llamada al backend para login de guardia
-      // Simulación de éxito:
-      loading.value = false
-      // Redirigir o mostrar dashboard
+      await authStore.login({
+        userType: 'guard',
+        username: form.document,
+        password: form.password
+      })
     } else {
-      await adminSchema.validate(form, { abortEarly: false, context: { show2FA: show2FA.value } })
-      // Aquí iría la llamada al backend para login de admin
-      // Si requiere 2FA, set show2FA.value = true
-      // Simulación:
-      if (!show2FA.value) {
-        show2FA.value = true
-        loading.value = false
-        return
-      }
-      loading.value = false
-      // Redirigir o mostrar dashboard
+      await adminSchema.validate(form, { abortEarly: false })
+      await authStore.login({
+        userType: 'admin',
+        username: form.username,
+        password: form.password
+      })
     }
+    loading.value = false
     Object.keys(errors).forEach(k => errors[k] = '')
+    router.push('/formulario-guardia')
   } catch (err) {
     loading.value = false
     if (err.inner) {

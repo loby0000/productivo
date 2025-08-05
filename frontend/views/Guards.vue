@@ -2,7 +2,7 @@
   <div class="bg-white shadow rounded-lg">
     <!-- Header -->
     <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
-      <h2 class="text-lg font-medium text-gray-900">Gestión de Guardias</h2>
+      <h1 class="text-lg font-medium text-gray-900">Gestión Guardias</h1>
       <button @click="showAddModal = true" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
         <Plus class="h-5 w-5 mr-2" />
         Nuevo Guardia
@@ -108,90 +108,73 @@
   </div>
 </template>
 
-<script>
+
+<script setup>
 import { ref, onMounted } from 'vue'
-import { Plus, Edit, Trash2 } from 'lucide-vue-next'
-import axios from 'axios'
+// import { Plus, Edit, Trash2 } from 'lucide-vue-next'
 
-export default {
-  components: {
-    Plus,
-    Edit,
-    Trash2
-  },
-  setup() {
-    const guards = ref([])
-    const showAddModal = ref(false)
-    const isEditing = ref(false)
-    const guardForm = ref({
-      name: '',
-      identification: '',
-      shift: 'mañana',
-      active: true
-    })
+import api from '../src/api'
 
-    const fetchGuards = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/guards')
-        guards.value = response.data
-      } catch (error) {
-        console.error('Error fetching guards:', error)
-      }
+const guards = ref([])
+const showAddModal = ref(false)
+const isEditing = ref(false)
+const guardForm = ref({
+  name: '',
+  identification: '',
+  shift: 'mañana',
+  active: true
+})
+
+const fetchGuards = async () => {
+  try {
+    const response = await api.get('/guards')
+    guards.value = response.data
+  } catch (error) {
+    console.error('Error fetching guards:', error)
+  }
+}
+
+const saveGuard = async () => {
+  try {
+    if (isEditing.value) {
+      await api.put(`/guards/${guardForm.value._id}`, guardForm.value)
+    } else {
+      await api.post('/guards', guardForm.value)
     }
+    showAddModal.value = false
+    await fetchGuards()
+    resetForm()
+  } catch (error) {
+    console.error('Error saving guard:', error)
+  }
+}
 
-    const saveGuard = async () => {
-      try {
-        if (isEditing.value) {
-          await axios.put(`http://localhost:3000/api/guards/${guardForm.value._id}`, guardForm.value)
-        } else {
-          await axios.post('http://localhost:3000/api/guards', guardForm.value)
-        }
-        showAddModal.value = false
-        await fetchGuards()
-        resetForm()
-      } catch (error) {
-        console.error('Error saving guard:', error)
-      }
-    }
+const editGuard = (guard) => {
+  guardForm.value = { ...guard }
+  isEditing.value = true
+  showAddModal.value = true
+}
 
-    const editGuard = (guard) => {
-      guardForm.value = { ...guard }
-      isEditing.value = true
-      showAddModal.value = true
-    }
-
-    const deleteGuard = async (id) => {
-      if (confirm('¿Estás seguro de eliminar este guardia?')) {
-        try {
-          await axios.delete(`http://localhost:3000/api/guards/${id}`)
-          await fetchGuards()
-        } catch (error) {
-          console.error('Error deleting guard:', error)
-        }
-      }
-    }
-
-    const resetForm = () => {
-      guardForm.value = {
-        name: '',
-        identification: '',
-        shift: 'mañana',
-        active: true
-      }
-      isEditing.value = false
-    }
-
-    onMounted(fetchGuards)
-
-    return {
-      guards,
-      showAddModal,
-      isEditing,
-      guardForm,
-      saveGuard,
-      editGuard,
-      deleteGuard
+const deleteGuard = async (id) => {
+  if (confirm('¿Estás seguro de eliminar este guardia?')) {
+    try {
+      await api.delete(`/guards/${id}`)
+      await fetchGuards()
+    } catch (error) {
+      console.error('Error deleting guard:', error)
     }
   }
 }
+
+const resetForm = () => {
+  guardForm.value = {
+    name: '',
+    identification: '',
+    shift: 'mañana',
+    active: true
+  }
+  isEditing.value = false
+}
+
+onMounted(fetchGuards)
 </script>
